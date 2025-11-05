@@ -11,10 +11,10 @@
 ---
 
 ## Project Background
-자율주행 기술의 급속한 발전과 상용화에 따라 도로 환경을 정확하게 인식하는 기술의 중요성이 꾸준히 커지고 있다.
-**교통 표지판 인식(Traffic Sign Recognition, TSR)** 은 자율주행 시스템과 첨단 운전자 보조 시스템(ADAS)의 핵심 인식 모듈로서 운전자에게 실시간 교통 표지 정보를 제공하거나 차량 제어 신호를 생성하는 역할을 한다.
-그러나 실제 주행 환경에서는 야간, 비, 안개 등과 같은 악조건에서 인식 정확도가 종종 저하되는 문제가 발생한다.
-이에 본 연구에서는 다양한 환경 조건에서도 안정적으로 작동하는 강인한 객체 탐지 모델의 필요성을 인식하고 YOLOv8 기반 교통 표지판 인식 모델의 성능 향상을 목표로 한다.
+자율주행 기술의 급속한 발전과 상용화에 따라 도로 환경을 정확하게 인식하는 기술의 중요성이 꾸준히 커지고 있음
+**교통 표지판 인식(Traffic Sign Recognition, TSR)** 은 자율주행 시스템과 첨단 운전자 보조 시스템(ADAS)의 핵심 인식 모듈로서 운전자에게 실시간 교통 표지 정보를 제공하거나 차량 제어 신호를 생성하는 역할을 함
+그러나 실제 주행 환경에서는 야간, 비, 안개 등과 같은 악조건에서 인식 정확도가 종종 저하되는 문제가 발생함
+이에 본 연구에서는 다양한 환경 조건에서도 안정적으로 작동하는 강인한 객체 탐지 모델의 필요성을 인식하고 YOLOv8 기반 교통 표지판 인식 모델의 성능 향상을 목표로 함
 
 ---
 
@@ -101,64 +101,65 @@ ex ) [0, 0, 1, 0] &rarr; [0.05, 0.05, 0.85, 0.05]
 ---
 
 ## Performance Metrics
-- Precision : The proportion of detected objects that are actually correct
-- Recall : The proportion of true objects that are correctly detected by the model
-- mAP@50 : Average precision per class when predicted boxes overlap with ground-truth boxes by ≥ 50%
-- mAP@50-95 : Average mAP over IoU thresholds from 50% to 95% in 5% increments
-
+- Precision : 모델이 탐지한 객체 중 실제로 올바른 객체의 비율
+- Recall : 실제 객체 중 모델이 올바르게 탐지한 비율
+- mAP@50 : 예측 박스와 실제 박스의 IoU가 50% 이상일 때 클래스별 평균 정밀도를 계산한 값
+- mAP@50-95 : IoU 임계값을 50%에서 95%까지 5% 간격으로 변화시키며 계산한 mAP의 평균값
+  
 ---
 
 ## Comparison of Loss Function
 <img width="701" height="190" alt="image" src="https://github.com/user-attachments/assets/3261f99c-705a-4fd9-bb57-3355a16dda12" />
 
-- BCE showed overall balanced performance, serving as a stable baseline model.
-- Focal Loss achieved the highest Recall (0.870), indicating that the model **missed fewer objects** overall.
-**&rarr; Suggests relative robustness to hard or rare samples**
-- Label Smoothing showed the highest Precision (0.916) but the lowest Recall (0.785), indicating **a tendency for the model to avoid predictions in uncertain cases.**
-**&rarr; more conservative, reduces overconfidence, improves generalization**
+- BCE는 전반적으로 균형 잡힌 성능을 보여 baseline 모델로 작용함
+- Focal Loss는 가장 높은 재현율(Recall, 0.870)을 기록하여 모델이 **놓치는 객체가 상대적으로 적었음**을 의미함
+**&rarr; 희귀하거나 분류가 어려운 샘플에 대해 상대적으로 강인함을 시사함**
+- Label Smoothing은 가장 높은 정밀도(Precision, 0.916)를 보였지만, 재현율(Recall, 0.785)은 가장 낮았음
+  **불확실한 경우 예측을 회피하는 보수적인 경향을 보임**
+**&rarr; 과신을 줄이고 일반화 성능을 향상시킴**
 
-- No single loss function performs best across all metrics 
-**&rarr; Combines the strengths of Label Smoothing and Focal Loss**
+- 어떤 단일 손실 함수도 모든 지표에서 최적의 성능을 보이지 않음 
+**&rarr; 따라서 Label Smoothing과 Focal Loss의 장점을 결합하여 새로운 손실 함수를 설계함**
 
 ---
 
 ## Combined Loss : Label Smoothing + Focal Loss
 <img width="260" height="266" alt="image" src="https://github.com/user-attachments/assets/7fdb9a25-f93f-43f9-82b0-e62c0e6bfb54" />
 
-- 𝑝_𝑖 : Softmax output (predicted probability)
-- 𝑦 ̃_𝑖  : Smoothed label distribution
-- 𝛾 : Focusing parameter → reduces loss for easy samples, focuses on hard sample
+- 𝑝_𝑖 : Softmax 출력값 (예측 확률)
+- 𝑦 ̃_𝑖  : 스무딩된 라벨 분포
+- 𝛾 : Focusing parameter &rarr; 쉬운 샘플의 손실을 줄이고 어려운 샘플에 집중하도록 함
 
-Combines Label Smoothing **(adds uncertainty to true class)**
-Focal Loss **(assigns higher weights to hard samples)**
-**&rarr; Prevents overfitting and focuses on hard samples**
+Label Smoothing **(정답 클래스에 불확실성을 부여)** 과
+Focal Loss **(어려운 샘플에 더 높은 가중치를 부여)** 를 결합하여
+**&rarr; 과적합을 방지하고 어려운 샘플에 집중하도록 개선**
 
 ### Experiments to find the optimal hyperparameters 
 <img width="711" height="270" alt="image" src="https://github.com/user-attachments/assets/666faecf-04cc-4c00-85f7-4cb0b0442b23" />
 
-- When **𝑦 ̃_𝑖=0.05,  𝛾=2.0**, the model showed a slight advantage in Precision and mAP@50-95, and achieved overall high performance. 
+- **𝑦 ̃_𝑖=0.05,  𝛾=2.0** 일 때, 모델은 Precision과 mAP@50-95에서 약간의 우위를 보였으며 전반적으로 높은 성능을 달성함
 
 ### Fine-grained hyperparameter tuning focused on 𝑦 ̃_𝑖 
 <img width="709" height="155" alt="image" src="https://github.com/user-attachments/assets/2e25e62b-b6c3-4ae1-bdde-6a1f405e3170" />
 
-- When **𝑦 ̃_𝑖=0.05,  𝛾=2.0**, the model achieved the best performance in Precision, mAP@50, and mAP@50-95, while maintaining a high level of Recall. 
-- Confirmed as the most optimal setting for overall performance
-
+- When **𝑦 ̃_𝑖=0.05,  𝛾=2.0** 일 때, 모델은 Precision, mAP@50, mAP@50-95에서 최고 성능을 보이면서도 높은 Recall을 유지함 
+- 전반적인 성능 측면에서 가장 최적의 설정으로 확인
+  
 ### Additional tuning of Confidence & IoU thresholds to improve post-processing performance
 <img width="877" height="127" alt="image" src="https://github.com/user-attachments/assets/05d1aba5-af44-47bb-bf61-e9a4f75da34b" />
 
-- When the confidence threshold of 0.25, the model achieved the best performance, recording the highest Precision (0.969), Recall (0.885), mAP@50 (0.939), and mAP@50-95 (0.822). 
-- Final hyperparameter settings : **𝑦 ̃_𝑖=0.05,  𝛾=2.0,  conf=0.25**
+- Confidence threshold = 0.25일 때, 모델은 Precision(0.969), Recall(0.885), mAP@50(0.939), mAP@50-95(0.822)로 최고 성능을 기록함 
+- 최종 하이퍼파라미터 설정 : **𝑦 ̃_𝑖=0.05,  𝛾=2.0,  conf=0.25**
 
 ---
 
 ## Conclusion
 <img width="394" height="231" alt="image" src="https://github.com/user-attachments/assets/63df1071-a7fe-4528-9717-4b2086bded78" />
 
-- Accurately detects and classifies traffic signs using the test dataset.
-- YOLOv8 with combined loss function achieved best performance: **Precision: 0.969, Recall: 0.885, mAP@50: 0.939, mAP@50–95: 0.822**
-- Demonstrates **accurate and stable object detection under nighttime and adverse weather.**
-- For future work, we plan to extend the model to real-world applications by implementing real-time detection and lightweight architectures. 
+- 테스트 데이터셋을 활용하여 교통 표지판을 정확하게 탐지하고 분류함
+- 결합 손실 함수를 적용한 YOLOv8 모델이 최고의 성능을 달성함 : **Precision: 0.969, Recall: 0.885, mAP@50: 0.939, mAP@50–95: 0.822**
+- **야간 및 악천후 환경에서도 정확하고 안정적인 객체 탐지 성능을 보여줌**
+- 향후 연구에서는 실시간 탐지 및 경량화 아키텍처 구현을 통해 실제 응용으로 확장할 계획 
 
 ## Project Outcome
 - 국제 학술대회 ICTC2025 제출
