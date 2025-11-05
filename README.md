@@ -1,48 +1,42 @@
 # Jump-up-Labs-TEMPLATE
-# 국립한밭대학교 인공지능소프트웨어학과 iSW
+# 국립한밭대학교 인공지능소프트웨어학과 iSW팀
 
 **팀 구성**
+- 30242860 채희주
 - 20221075 정현서
 - 20221073 정은주
 - 20221067 장채은
 - 20231077 최은실
-- 30242860 채희주
-
-
-# Performance Enhancement Technique for Traffic Sign Recognition using Combining Label Smoothing and Focal Loss
 
 ---
 
 ## Project Background
-With the rapid development and commercialization of autonomous driving technology, the importance of accurate road environment perception is steadily increasing.
-
-**Traffic Sign Recognition (TSR)** is a key perception module in both autonomous driving systems and ADAS, providing real-time traffic sign information to drivers or generating vehicle control signals.
-
-In real-world environments, recognition accuracy often decreases under adverse conditions such as **nighttime, rain, and fog**.
-
-Recognizing the necessity of developing a robust object detection model that performs reliably under diverse environmental conditions, this study aims to **enhance the performance of a YOLOv8-based traffic sign recognition model**.
+자율주행 기술의 급속한 발전과 상용화에 따라, 도로 환경을 정확하게 인식하는 기술의 중요성이 꾸준히 커지고 있다.
+**교통 표지판 인식(Traffic Sign Recognition, TSR)**은 자율주행 시스템과 첨단 운전자 보조 시스템(ADAS)의 핵심 인식 모듈로서, 운전자에게 실시간 교통 표지 정보를 제공하거나 차량 제어 신호를 생성하는 역할을 한다.
+그러나 실제 주행 환경에서는 야간, 비, 안개 등과 같은 악조건에서 인식 정확도가 종종 저하되는 문제가 발생한다.
+이에 본 연구에서는 다양한 환경 조건에서도 안정적으로 작동하는 강인한 객체 탐지 모델의 필요성을 인식하고, YOLOv8 기반 교통 표지판 인식 모델의 성능 향상을 목표로 한다.
 
 ---
 
 ## Dataset
-- Dataset: Publicly available traffic sign dataset from Kaggle  
-- Total images: 877  
-- Number of classes: 4  
-  - Speed Limit: 783  
-  - Traffic Light: 170  
-  - Crosswalk: 200  
-  - Stop: 91
+- 데이터셋 : Kaggle에서 공개된 교통 표지판 데이터셋 사용
+- 전체 이미지 수 : 877장
+- 클래스 수 : 4종
+  - 속도 제한(Speed Limit) : 783장
+  - 신호등(Traffic Light) : 170장
+  - 횡단보도(Crosswalk) : 200장  
+  - 정지(Stop) : 91장
   <img width="346" height="234" alt="image" src="https://github.com/user-attachments/assets/fc5caf95-4e25-4831-92ba-29b99318d944" />
-  &rarr; Class imbalance
+  &rarr; 클래스 불균형
 
 
-- Image augmentation using Albumentations library
-	- Brightness, contrast, blur, fog, rain, etc.
-- Dataset split : Randomly shuffled &rarr; Train 80% / Validation 10% / Test 10%
-- **Train : Original + Night/Adverse weather augmented images**
-  &rarr; to account for diverse scenarios
-- **Validation / Test : Original images**
-  &rarr; to fairly evaluate the generalization performance of the model
+- 이미지 증강: Albumentations 라이브러리를 사용
+  - 밝기, 대비, 블러, 안개, 비 등
+- 데이터셋 분할 : 무작위로 셔플 후 &rarr; Train 80% / Validation 10% / Test 10%
+- **Train : 원본 이미지 + 야간/악천후 증강 이미지**
+  &rarr; 다양한 시나리오를 반영하기 위함
+- **Validation / Test : 원본 이미지**
+  &rarr; 모델의 일반화 성능을 공정하게 평가하기 위함
   
   <img width="818" height="160" alt="image" src="https://github.com/user-attachments/assets/491f7d8b-9676-45d5-9f12-127148788b91" />
 
@@ -50,59 +44,58 @@ Recognizing the necessity of developing a robust object detection model that per
 
 ## YOLOv8 (You Only Look Once)
 - Backbone
- Multi-scale feature extraction using advanced CNN
+ 고급 CNN을 활용한 다중 스케일 특징 추출
 
 - Neck
- Fusion of features at different scales
- Improves detection performance for small to large objects
+ 서로 다른 스케일의 특징을 융합하여 작은 물체부터 큰 물체까지 탐지 성능을 향상
 
 - Head
- **Anchor-Free structure** : Direct prediction without Anchor Boxes &rarr; **simplifying the architecture and enhancing flexibility**
+ **Anchor-Free 구조** : 앵커 박스 없이 직접 예측 &rarr; **모델 구조 단순화 및 유연성 향상**
 
 ---
 
 ## Binary Cross Entropy (BCE)
 <img width="450" height="43" alt="image" src="https://github.com/user-attachments/assets/3e4ba742-afe3-4166-8c03-29ab063b4d4b" />
 
-- 𝑦∈{0,1}   : Ground truth (actual label)
-- 𝑦 ̂∈{0,1} : Sigmoid output (predicted probability)
+- 𝑦∈{0,1} : 실제 정답(Ground truth, 실제 레이블)
+- 𝑦 ̂∈{0,1} : Sigmoid 출력값 (예측 확률)
 
-- Representative loss function used in binary classification
-- Default loss function in YOLOv8
-- Calculates the difference between predicted probability and true label
-- **Tends to make the model overconfident in the correct class**
-  &rarr; May cause performance degradation when dealing with class imbalance or hard-to-classify samples.
+- 이진 분류에서 사용되는 대표적인 손실 함수
+- YOLOv8의 기본 손실 함수로 사용됨
+- 예측 확률과 실제 레이블 간의 차이를 계산함
+- **정답 클래스에 대해 모델이 과도하게 확신하도록 만드는 경향이 있음**
+  &rarr; 클래스 불균형이나 분류가 어려운 샘플을 다룰 때 성능 저하를 유발할 수 있음
 
 ---
 
 ## Focal Loss
 <img width="307" height="39" alt="image" src="https://github.com/user-attachments/assets/34fa5e81-8037-4913-bcc8-52195fef4cf2" />
 
-- 𝑝_𝑡 : Predicted probability for true class
-- 𝛼 : Class weight
-- 𝛾 : Focusing parameter → reduces loss for easy samples, focuses on hard samples
+- 𝑝_𝑡 : 실제 클래스에 대한 예측 확률
+- 𝛼 : 클래스 가중치
+- 𝛾 : Focusing parameter &rarr; 쉬운 샘플의 손실을 줄이고 어려운 샘플에 집중하도록 조정
 
-- Adjusts the weighting so that the model can focus more on hard samples rather than easy ones
-- α assigns larger weight to minority classes 
-  $rarr; **Helps alleviate class imbalance**
-- γ gives higher loss to misclassified samples
+- 손실의 가중치를 조정하여, 모델이 쉬운 샘플보다 어려운 샘플에 더 집중하도록 함
+- α는 소수 클래스에 더 큰 가중치를 부여 
+  &rarr; **클래스 불균형 문제 완화에 도움**
+- γ는 오분류된 샘플에 더 큰 손실을 부여함
 
 ---
 
 ## Label Smoothing Cross Entropy Loss
 <img width="219" height="57" alt="image" src="https://github.com/user-attachments/assets/b294a327-9c10-4528-8971-3b5b47f8701f" />
 
-- 𝛼∈{0,1} : smoothing factor
-- 𝐾 : Number of classes
-- 𝑦 ̃_𝑘 : Smoothed label distribution
+- 𝛼∈{0,1} : 스무딩 계수
+- 𝐾 : 클래스의 개수
+- 𝑦 ̃_𝑘 : 스무딩된 라벨 분포
 
 <img width="186" height="266" alt="image" src="https://github.com/user-attachments/assets/15bf2b45-a321-4d71-94e1-1770f9207e92">
 
-- 𝑦 ̃_𝑖  : Smoothed label distribution
-- 𝑝_𝑖 : Softmax output (predicted probability)
+- 𝑦 ̃_𝑖  : 스무딩된 라벨 분포
+- 𝑝_𝑖 : Softmax 출력값 (예측 확률)
 
-- **Adds small uncertainty** to true class, preventing overconfidence in the correct label
-  **&rarr; Improves generalization and prevent overfitting**
+- 실제 정답 라벨에 **작은 불확실성**을 추가하여 모델이 정답 클래스에 과도하게 확신하지 않도록 함
+  **&rarr; 일반화 성능 향상 및 과적합 방지**
 ex ) [0, 0, 1, 0] &rarr; [0.05, 0.05, 0.85, 0.05] 
 
 ---
